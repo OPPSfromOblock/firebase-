@@ -982,24 +982,49 @@
         ];
 
        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Verify your config matches what's in Firebase console
 const firebaseConfig = {
   apiKey: "AIzaSyC-PWACGXNrJ8H8N-y9PtbkDb3j3drPktI",
   authDomain: "gstatus-3c130.firebaseapp.com",
-  databaseURL: "https://gstatus-3c130-default-rtdb.firebaseio.com/",
+  databaseURL: "https://gstatus-3c130-default-rtdb.firebaseio.com", // Ensure this is correct
   projectId: "gstatus-3c130",
-  storageBucket: "gstatus-3c130.firebasestorage.app",
+  storageBucket: "gstatus-3c130.appspot.com", // Typically ends with .appspot.com
   messagingSenderId: "997950283250",
   appId: "1:997950283250:web:2e176b0ded05871a239f6b",
   measurementId: "G-RLKH5C7P42"
 };
         
-        // Initialize Firebase
-        try {
-            firebase.initializeApp(firebaseConfig);
-        } catch (err) {
-            console.error("Firebase initialization error", err);
-        }
+      // Initialize Firebase
+let firebaseApp;
+try {
+  firebaseApp = firebase.initializeApp(firebaseConfig);
+  console.log("Firebase initialized successfully");
+} catch (err) {
+  console.error("Firebase initialization error", err);
+  // Show user-friendly error message
+  alert("Failed to connect to database. Please check your internet connection and try again.");
+}
 
+// Modify your loadStudentsFromFirebase function:
+function loadStudentsFromFirebase() {
+  showLoading();
+  return database.ref('students').once('value')
+    .then(snapshot => {
+      if (!snapshot.exists()) {
+        console.log("No data available, using default students");
+        return allStudents;
+      }
+      return snapshot.val();
+    })
+    .catch(error => {
+      console.error("Error loading students:", error);
+      // Fall back to default data if offline
+      return allStudents;
+    })
+    .finally(() => {
+      hideLoading();
+    });
+}
         // Global variables
         let students = [];
         let responseHistory = [];
