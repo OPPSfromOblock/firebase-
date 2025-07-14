@@ -1436,10 +1436,63 @@ const allStudents = [
 
         // Handle search functionality
         function handleSearch(inputId, resultsId) {
-            document.getElementById(inputId).addEventListener('input', function() {
-                const query = this.value.toLowerCase().trim();
-                const results = document.getElementById(resultsId);
-                results.innerHTML = '';
+    const inputElement = document.getElementById(inputId);
+    if (inputElement) {
+        inputElement.addEventListener('input', function() {
+            const query = (this.value || '').toLowerCase().trim();
+            const results = document.getElementById(resultsId);
+            results.innerHTML = '';
+            
+            if (query) {
+                const filteredStudents = students.filter(student => {
+                    const floor = student.room.split('/')[0];
+                    return student.name.toLowerCase().includes(query) || 
+                           student.id.toLowerCase().includes(query) || 
+                           student.room.toLowerCase().includes(query) || 
+                           floor.toLowerCase().includes(query);
+                });
+                
+                if (filteredStudents.length) {
+                    filteredStudents.forEach(student => {
+                        const studentCard = document.createElement('div');
+                        studentCard.className = 'col-md-6 mb-3';
+                        studentCard.innerHTML = `
+                            <div class="card student-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <h5 class="card-title">${student.name}</h5>
+                                        <span class="points-badge ${student.points >= 0 ? 'positive-points' : 'negative-points'}">
+                                            ${student.points > 0 ? '+' : ''}${student.points} pts
+                                        </span>
+                                    </div>
+                                    <p class="card-text mb-1">
+                                        <i class="fas fa-id-card"></i> ${student.id} 
+                                        | <i class="fas fa-door-open"></i> ${student.room}
+                                        | <i class="fas fa-layer-group"></i> ${student.floor} Floor
+                                    </p>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                            name="${inputId === 'searchQueryPoints' ? 'selectedStudents' : 'selectedRankings'}" 
+                                            value="${student.id}" 
+                                            id="${inputId}_${student.id}">
+                                        <label class="form-check-label" for="${inputId}_${student.id}">
+                                            Select student
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        results.appendChild(studentCard);
+                    });
+                } else {
+                    results.innerHTML = '<div class="col-12"><div class="alert alert-info">No students found matching your search.</div></div>';
+                }
+            }
+        });
+    } else {
+        console.error(`Input element with ID '${inputId}' not found.`);
+    }
+}
                 
                 if (query) {
                     const filteredStudents = students.filter(student => {
