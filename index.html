@@ -1522,6 +1522,7 @@
                                         <option value="RAJIV">RAJIV</option>
                                         <option value="HARI KRISHNA TIWARI">HARI KRISHNA TIWARI</option>
                                         <option value="SHIVA KRISHNA">SHIVA KRISHNA</option>
+                                        <option value="RONAK SIR">RONAK SIR/option>
                                         <option value="Manoj">Manoj</option>
                                         <option value="Testing Admin">Testing admin</option>
                                     </select>
@@ -2492,16 +2493,16 @@
 
         // --- DASHBOARD LOGIC (from dashboard.html) ---
         // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAtanJUJCZmcvGf_JS0ffKc1SlhMW8aWug",
-  authDomain: "gstatus-304a8.firebaseapp.com",
-  databaseURL: "https://gstatus-304a8-default-rtdb.firebaseio.com",
-  projectId: "gstatus-304a8",
-  storageBucket: "gstatus-304a8.firebasestorage.app",
-  messagingSenderId: "382807331706",
-  appId: "1:382807331706:web:c9e2a5236753e97580bcc3",
-  measurementId: "G-97JXW80ZLY"
-};
+        const firebaseConfig = {
+          apiKey: "AIzaSyAsFiadkeL-__gF_Lb5VY2iap4DlatkaX4",
+          authDomain: "senior-data-researchinnovation.firebaseapp.com",
+          databaseURL: "https://senior-data-researchinnovation-default-rtdb.firebaseio.com",
+          projectId: "senior-data-researchinnovation",
+          storageBucket: "senior-data-researchinnovation.firebasestorage.app",
+          messagingSenderId: "587116206951",
+          appId: "1:587116206951:web:ddf6db02ecd19a63cf2dc2",
+          measurementId: "G-8E23BREM8V"
+        };
         let firebaseApp;
         try {
             firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -2756,203 +2757,179 @@ const firebaseConfig = {
             });
 
             document.getElementById('pointsForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const updatePointsButton = document.getElementById('updatePointsBtn');
+    e.preventDefault();
+    const updatePointsButton = document.getElementById('updatePointsBtn');
 
-                // IMMEDIATELY DISABLE THE BUTTON AND SHOW FEEDBACK
-                updatePointsButton.disabled = true;
-                updatePointsButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
+    updatePointsButton.disabled = true;
+    updatePointsButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
 
+    const selectedStudentIds = Array.from(document.querySelectorAll('#searchResultsPoints input[name="selectedStudents"]:checked')).map(input => input.value);
+    const positiveActionSelect = document.getElementById('positiveAction');
+    const negativeActionSelect = document.querySelector('[name="negativeAction"]');
+    const percentageInput = document.getElementById('percentageInput').value;
+    const adminModifierDropdown = document.getElementById('adminSelector').value;
+    const teacherAdminNameInput = document.getElementById('teacherAdminName').value.trim();
+    const adminEmailInput = currentUser Email; // This should be populated from the logged-in user
 
-                const selectedStudentIds = Array.from(document.querySelectorAll('#searchResultsPoints input[name="selectedStudents"]:checked')).map(input => input.value);
-                const positiveActionSelect = document.getElementById('positiveAction');
-                const negativeActionSelect = document.querySelector('[name="negativeAction"]');
-                const percentageInput = document.getElementById('percentageInput').value;
-                const adminModifierDropdown = document.getElementById('adminSelector').value;
-                const teacherAdminNameInput = document.getElementById('teacherAdminName').value.trim();
-                const adminEmailInput = currentUserEmail;
+    if (!selectedStudentIds.length) {
+        displayUpdateMessage('updateMessage', 'Please select at least one student.', 'danger');
+        updatePointsButton.disabled = false;
+        updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+        return;
+    }
 
-                if (!selectedStudentIds.length) {
-                    displayUpdateMessage('updateMessage', 'Please select at least one student.', 'danger');
-                    updatePointsButton.disabled = false;
-                    updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                    return;
-                }
+    if (!adminEmailInput) {
+        displayUpdateMessage('updateMessage', 'Your email ID is missing. Please log in again.', 'danger');
+        updatePointsButton.disabled = false;
+        updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+        return;
+    }
 
-                if (!adminEmailInput) {
-                    displayUpdateMessage('updateMessage', 'Your email ID is missing. Please log in again.', 'danger');
-                    updatePointsButton.disabled = false;
-                    updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                    return;
-                }
+    let modifiedBy = '';
+    if (adminModifierDropdown) {
+        modifiedBy = adminModifierDropdown;
+    } else if (teacherAdminNameInput) {
+        modifiedBy = teacherAdminNameInput;
+    } else {
+        displayUpdateMessage('updateMessage', 'Please select an Incharge or enter a Teacher\'s Name.', 'danger');
+        updatePointsButton.disabled = false;
+        updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+        return;
+    }
+    modifiedBy += ` (${adminEmailInput})`; // Append email to the chosen name
 
-                let modifiedBy = '';
-                if (adminModifierDropdown) {
-                    modifiedBy = adminModifierDropdown;
-                } else if (teacherAdminNameInput) {
-                    modifiedBy = teacherAdminNameInput;
-                } else {
-                    displayUpdateMessage('updateMessage', 'Please select an Incharge or enter a Teacher\'s Name.', 'danger');
-                    updatePointsButton.disabled = false;
-                    updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                    return;
-                }
-                modifiedBy += ` (${adminEmailInput})`;
+    let points = 0;
+    let actionText = '';
+    let isPositive = false;
 
-                let points = 0;
-                let actionText = '';
-                let isPositive = false;
+    if (positiveActionSelect.value && negativeActionSelect.value) {
+        displayUpdateMessage('updateMessage', 'Please select only one action (positive or negative).', 'danger');
+        updatePointsButton.disabled = false;
+        updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+        return;
+    } else if (positiveActionSelect.value) {
+        isPositive = true;
 
-                if (positiveActionSelect.value && negativeActionSelect.value) {
-                    displayUpdateMessage('updateMessage', 'Please select only one action (positive or negative).', 'danger');
-                    updatePointsButton.disabled = false;
-                    updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                    return;
-                } else if (positiveActionSelect.value) {
-                    isPositive = true;
-                    // Role check for positive points
-                    if (currentUserRole === 'teacher') {
-                        displayUpdateMessage('updateMessage', 'Teachers can only deduct negative points.', 'danger');
-                        updatePointsButton.disabled = false;
-                        updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                        return;
-                    }
+        if (positiveActionSelect.value === 'exam') {
+            const percentage = parseInt(percentageInput);
+            if (isNaN(percentage) || percentage < 0 || percentage > 100) {
+                displayUpdateMessage('updateMessage', 'Please enter a valid percentage (0-100).', 'danger');
+                updatePointsButton.disabled = false;
+                updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+                return;
+            }
+            points = percentage >= 90 ? 20 : percentage >= 80 ? 15 : percentage >= 70 ? 10 : 5;
+            actionText = `Exam Percentage (${percentage}%)`;
+        } else if (positiveActionSelect.value === 'custom') {
+            const customPoints = parseInt(document.getElementById('customPositivePoints').value);
+            if (isNaN(customPoints) || customPoints <= 0) {
+                displayUpdateMessage('updateMessage', 'Please enter a valid positive custom point value.', 'danger');
+                updatePointsButton.disabled = false;
+                updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+                return;
+            }
+            const customReason = document.getElementById('customPositiveReason').value.trim();
+            if (!customReason) {
+                displayUpdateMessage('updateMessage', 'Please provide a reason for custom positive points.', 'danger');
+                updatePointsButton.disabled = false;
+                updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+                return;
+            }
+            points = customPoints;
+            actionText = `Custom Positive: ${customReason} (+${customPoints})`;
+        } else {
+            points = parseInt(positiveActionSelect.value);
+            actionText = positiveActionSelect.options[positiveActionSelect.selectedIndex].text;
+        }
+    } else if (negativeActionSelect.value) {
+        isPositive = false;
+        if (negativeActionSelect.value === 'custom') {
+            const customPoints = parseInt(document.getElementById('customNegativePoints').value);
+            if (isNaN(customPoints) || customPoints >= 0) {
+                displayUpdateMessage('updateMessage', 'Please enter a valid negative custom point value (e.g., -15).', 'danger');
+                updatePointsButton.disabled = false;
+                updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+                return;
+            }
+            const customReason = document.getElementById('customNegativeReason').value.trim();
+            if (!customReason) {
+                displayUpdateMessage('updateMessage', 'Please provide a reason for custom negative points.', 'danger');
+                updatePointsButton.disabled = false;
+                updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+                return;
+            }
+            points = customPoints;
+            actionText = `Custom Negative: ${customReason} (${points})`;
+        } else {
+            points = parseInt(negativeActionSelect.value);
+            actionText = negativeActionSelect.options[negativeActionSelect.selectedIndex].text;
+        }
+    } else {
+        displayUpdateMessage('updateMessage', 'Please select an action.', 'danger');
+        updatePointsButton.disabled = false;
+        updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
+        return;
+    }
 
-                    if (positiveActionSelect.value === 'exam') {
-                        const percentage = parseInt(percentageInput);
-                        if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-                            displayUpdateMessage('updateMessage', 'Please enter a valid percentage (0-100).', 'danger');
-                            updatePointsButton.disabled = false;
-                            updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                            return;
-                        }
-                        points = percentage >= 90 ? 20 : percentage >= 80 ? 15 : percentage >= 70 ? 10 : 5;
-                        actionText = `Exam Percentage (${percentage}%)`;
-                    } else if (positiveActionSelect.value === 'custom') {
-                        const customPoints = parseInt(document.getElementById('customPositivePoints').value);
-                        if (isNaN(customPoints) || customPoints <= 0) {
-                            displayUpdateMessage('updateMessage', 'Please enter a valid positive custom point value.', 'danger');
-                            updatePointsButton.disabled = false;
-                            updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                            return;
-                        }
-                        const customReason = document.getElementById('customPositiveReason').value.trim();
-                        if (!customReason) {
-                            displayUpdateMessage('updateMessage', 'Please provide a reason for custom positive points.', 'danger');
-                            updatePointsButton.disabled = false;
-                            updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                            return;
-                        }
-                        points = customPoints;
-                        actionText = `Custom Positive: ${customReason} (+${customPoints})`;
-                    } else {
-                        points = parseInt(positiveActionSelect.value);
-                        actionText = positiveActionSelect.options[positiveActionSelect.selectedIndex].text;
-                    }
-                } else if (negativeActionSelect.value) {
-                    isPositive = false;
-                    if (negativeActionSelect.value === 'custom') {
-                        const customPoints = parseInt(document.getElementById('customNegativePoints').value);
-                        if (isNaN(customPoints) || customPoints >= 0) {
-                            displayUpdateMessage('updateMessage', 'Please enter a valid negative custom point value (e.g., -15).', 'danger');
-                            updatePointsButton.disabled = false;
-                            updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                            return;
-                        }
-                        const customReason = document.getElementById('customNegativeReason').value.trim();
-                        if (!customReason) {
-                            displayUpdateMessage('updateMessage', 'Please provide a reason for custom negative points.', 'danger');
-                            updatePointsButton.disabled = false;
-                            updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                            return;
-                        }
-                        points = customPoints;
-                        actionText = `Custom Negative: ${customReason} (${points})`;
-                    } else {
-                        points = parseInt(negativeActionSelect.value);
-                        actionText = negativeActionSelect.options[negativeActionSelect.selectedIndex].text;
-                    }
-                } else {
-                    displayUpdateMessage('updateMessage', 'Please select an action.', 'danger');
-                    updatePointsButton.disabled = false;
-                    updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                    return;
-                }
+    const now = new Date();
+    const date = now.toLocaleDateString('en-GB');
+    const time = now.toLocaleTimeString('en-GB');
 
-                let onCooldownForAnyStudent = false;
-                let cooldownMessage = '';
+    try {
+        const studentNames = [];
+        const updatePromises = [];
 
-                for (const studentId of selectedStudentIds) {
-                    const cooldownStatus = checkAndApplyCooldown(adminEmailInput, studentId, isPositive);
-                    if (cooldownStatus.onCooldown) {
-                        onCooldownForAnyStudent = true;
-                        const studentName = students.find(s => s.id === studentId)?.name || studentId;
-                        cooldownMessage = `Cannot add points to ${studentName}. You have modified this student's points too frequently. Please wait ${cooldownStatus.minutesLeft} minutes.`;
-                        break;
-                    }
-                }
+        for (const studentId of selectedStudentIds) {
+            const studentsSnapshot = await database.ref('students').once('value');
+            const studentsData = studentsSnapshot.val();
+            const studentIndex = Object.keys(studentsData).findIndex(key => studentsData[key].id === studentId);
 
-                if (onCooldownForAnyStudent) {
-                    displayUpdateMessage('updateMessage', cooldownMessage, 'danger');
-                    updatePointsButton.disabled = false;
-                    updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points';
-                    return;
-                }
+            if (studentIndex !== -1) {
+                const student = studentsData[studentIndex];
+                const oldPoints = student.points;
+                const newPoints = oldPoints + points;
+                studentNames.push(student.name);
 
-                const now = new Date();
-                const date = now.toLocaleDateString('en-GB');
-                const time = now.toLocaleTimeString('en-GB');
+                // Update student points in Firebase using the index
+                updatePromises.push(database.ref('students/' + studentIndex).update({ points: newPoints }));
 
-                try {
-                    const studentNames = [];
-                    const updatePromises = [];
+                // Add history entry to Firebase
+                updatePromises.push(addHistoryEntryToFirebase({
+                    date,
+                    time,
+                    studentId,
+                    name: student.name,
+                    action: actionText,
+                    pointsChanged: points,
+                    oldPoints: oldPoints,
+                    newPoints: newPoints,
+                    modifiedBy: modifiedBy
+                }));
+            } else {
+                console.warn(`Student with ID ${studentId} not found in Firebase.`);
+            }
+        }
 
-                    for (const studentId of selectedStudentIds) {
-                        const student = students.find(s => s.id === studentId);
-                        if (student) {
-                            const oldPoints = student.points;
-                            const newPoints = oldPoints + points;
-                            studentNames.push(student.name);
+        await Promise.all(updatePromises);
 
-                            // Update student points in Firebase
-                            updatePromises.push(updateStudentInFirebase(student.id, { points: newPoints }));
+        const studentNamesString = studentNames.join(', ');
+        displayUpdateMessage('updateMessage', `Done, added points for ${studentNamesString} by ${modifiedBy}.`, 'success');
 
-                            // Add history entry to Firebase
-                            updatePromises.push(addHistoryEntryToFirebase({
-                                date,
-                                time,
-                                studentId,
-                                name: student.name,
-                                action: actionText,
-                                pointsChanged: points,
-                                oldPoints: oldPoints, // Store old points for history
-                                newPoints: newPoints, // Store new points for history
-                                modifiedBy: modifiedBy
-                            }));
-                        }
-                    }
+        document.getElementById('pointsForm').reset();
+        document.getElementById('examPercentage').style.display = 'none';
+        document.getElementById('customPositiveInput').style.display = 'none';
+        document.getElementById('customNegativeInput').style.display = 'none';
+        document.getElementById('searchResultsPoints').innerHTML = '';
+        document.getElementById('searchQueryPoints').value = '';
+    } catch (error) {
+        console.error("Error updating points:", error);
+        displayUpdateMessage('updateMessage', 'Error updating points. Please try again.', 'danger');
+    } finally {
+        updatePointsButton.disabled = false;
+        updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points'; // Reset button text/icon
+    }
+});
 
-                    await Promise.all(updatePromises);
-
-                    const studentNamesString = studentNames.join(', ');
-                    displayUpdateMessage('updateMessage', `Done, added points for ${studentNamesString} by ${modifiedBy}.`, 'success');
-
-                    document.getElementById('pointsForm').reset();
-                    document.getElementById('examPercentage').style.display = 'none';
-                    document.getElementById('customPositiveInput').style.display = 'none';
-                    document.getElementById('customNegativeInput').style.display = 'none';
-                    document.getElementById('searchResultsPoints').innerHTML = '';
-                    document.getElementById('searchQueryPoints').value = '';
-                    // No need to call refreshRankings() or refreshResponses() explicitly here
-                    // as the real-time listeners will handle the UI updates.
-                } catch (error) {
-                    console.error("Error updating points:", error);
-                    displayUpdateMessage('updateMessage', 'Error updating points. Please try again.', 'danger');
-                } finally {
-                    updatePointsButton.disabled = false;
-                    updatePointsButton.innerHTML = '<i class="fas fa-save"></i> Update Points'; // Reset button text/icon
-                }
-            });
 
             window.updateRemark = async function(studentId, newRemark) {
                 const student = students.find(s => s.id === studentId);
@@ -3177,7 +3154,7 @@ const firebaseConfig = {
                     publicNoteModal.hide();
                     // renderPublicNotes() will be called by real-time listener
                 } catch (error) {
-                    displayUpdateMessage('publicNoteMessage', `Error ${noteId ? 'updating' : 'adding'} public note. Please try again.`, 'danger');
+                    displayUpdateMessage('publicNoteMessage', `Error ${noteId ? 'updating' : 'adding'} public note. Please tryC again.`, 'danger');
                     console.error("Error saving public note:", error);
                 }
             });
@@ -3644,10 +3621,10 @@ const firebaseConfig = {
             if (searchQueryHistory) {
                 filteredHistory = filteredHistory.filter(entry => {
                     const name = entry.name ? entry.name.toLowerCase() : '';
-                    const id = entry.id ? entry.id.toLowerCase() : ''; // Changed from entry.studentId to entry.id
+                    const id = entry.studentId ? entry.studentId.toLowerCase() : '';
                     const student = students.find(s => s.id === entry.studentId);
-                    const studentClass = student ? (student.class ? student.class.toLowerCase() : '') : '';
-                    const section = student ? (student.section ? student.section.toLowerCase() : '') : '';
+                    const studentClass = student ? student.class.toLowerCase() : '';
+                    const section = student ? student.section.toLowerCase() : '';
 
                     // Check if the search query matches email ID in modifiedBy
                     const modifiedByEmailMatch = entry.modifiedBy && entry.modifiedBy.toLowerCase().includes(searchQueryHistory);
@@ -3907,21 +3884,23 @@ const firebaseConfig = {
                 const section = student.section ? student.section.toLowerCase() : '';
 
                 let matchesSearch = false;
-                // Check if any direct field matches the query
+                // Check if query matches name, ID, room, or floor
                 if (name.includes(searchQuery) || id.includes(searchQuery) || room.includes(searchQuery) || floor.includes(searchQuery)) {
                     matchesSearch = true;
                 }
 
-                // Check for class-section combination
+                // Check for class-section combination (e.g., "X-A")
                 if (classQuery && sectionQuery) {
                     if (studentClass === classQuery && section === sectionQuery) {
                         matchesSearch = true;
                     }
                 } 
-                // Check for class only or section only if not a combination search
+                // Check for class only (e.g., "X")
                 else if (classQuery && studentClass.includes(classQuery)) {
                     matchesSearch = true;
-                } else if (sectionQuery && section.includes(sectionQuery)) {
+                } 
+                // Check for section only (e.g., "A")
+                else if (sectionQuery && section.includes(sectionQuery)) {
                     matchesSearch = true;
                 }
                 return matchesSearch;
@@ -4021,18 +4000,6 @@ const firebaseConfig = {
                     li.innerHTML = `<a class="page-link" href="#" title="More pages available.">...</a>`;
                     paginationContainer.appendChild(li);
                 }
-
-                li = document.createElement('li');
-                li.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
-                li.innerHTML = `<a class="page-link" href="#" aria-label="Last" title="Go to the last page."><span aria-hidden="true">&raquo;</span></a>`;
-                li.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (currentPage !== totalPages) {
-                        currentPage = totalPages;
-                        renderStudentManagementTable();
-                    }
-                });
-                paginationContainer.appendChild(li);
 
                 li = document.createElement('li');
                 li.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
@@ -5360,4 +5327,177 @@ const firebaseConfig = {
                 inchargeRankingsTable.innerHTML = '<tr><td colspan="6" class="text-center">No incharge activity found.</td></tr>';
             } else {
                 const fragment = document.createDocumentFragment();
-                sortedIncharges.forEach((incharge, index) =>
+                sortedIncharges.forEach((incharge, index) => {
+                    const row = document.createElement('tr');
+                    const nameParts = incharge.name.match(/^(.*?)\s*\(([^)]+)\)$/);
+                    const displayName = nameParts ? nameParts[1].trim() : incharge.name;
+                    const email = nameParts ? nameParts[2].trim() : 'N/A';
+
+                   row.innerHTML = `
+                        <td data-label="Rank"><i class="fas fa-sort-numeric-up-alt"></i> ${index + 1}</td>
+                        <td data-label="Incharge Name"><i class="fas fa-user-tie"></i> ${displayName}</td>
+                        <td data-label="Email"><i class="fas fa-envelope"></i> ${email}</td>
+                        <td data-label="Positive Entries" class="text-success"><i class="fas fa-plus-circle"></i> ${incharge.positive}</td>
+                        <td data-label="Negative Entries" class="text-danger"><i class="fas fa-minus-circle"></i> ${incharge.negative}</td>
+                        <td data-label="Total Entries"><i class="fas fa-list-alt"></i> ${incharge.total}</td>
+                    `;
+                    fragment.appendChild(row);
+                });
+                inchargeRankingsTable.appendChild(fragment);
+            }
+
+            // 2. Floor Statistics
+            const floorStats = {}; 
+
+            students.forEach(student => {
+                const floor = student.floor || 'Unknown';
+                if (!floorStats[floor]) {
+                    floorStats[floor] = { totalStudents: 0, totalPoints: 0, positiveEntries: 0, negativeEntries: 0 };
+                }
+                floorStats[floor].totalStudents++;
+                floorStats[floor].totalPoints += student.points;
+            });
+
+            responseHistory.forEach(entry => {
+                const student = students.find(s => s.id === entry.studentId);
+                if (student) {
+                    const floor = student.floor || 'Unknown';
+                    if (floorStats[floor]) {
+                        if (entry.pointsChanged > 0) {
+                            floorStats[floor].positiveEntries++;
+                        } else if (entry.pointsChanged < 0) {
+                            floorStats[floor].negativeEntries++;
+                        }
+                    }
+                }
+            });
+
+            const sortedFloors = Object.keys(floorStats).sort((a, b) => a - b);
+
+            floorStatisticsTable.innerHTML = '';
+            if (sortedFloors.length === 0) {
+                floorStatisticsTable.innerHTML = '<tr><td colspan="5" class="text-center">No floor data available.</td></tr>';
+            } else {
+                const fragment = document.createDocumentFragment();
+                sortedFloors.forEach(floor => {
+                    const stats = floorStats[floor];
+                    const avgPoints = stats.totalStudents > 0 ? (stats.totalPoints / stats.totalStudents).toFixed(2) : 0;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td data-label="Floor"><i class="fas fa-building"></i> ${floor}</td>
+                        <td data-label="Total Students"><i class="fas fa-users"></i> ${stats.totalStudents}</td>
+                        <td data-label="Average Points"><i class="fas fa-coins"></i> ${avgPoints}</td>
+                        <td data-label="Total Positive Entries" class="text-success"><i class="fas fa-plus-circle"></i> ${stats.positiveEntries}</td>
+                        <td data-label="Total Negative Entries" class="text-danger"><i class="fas fa-minus-circle"></i> ${stats.negativeEntries}</td>
+                    `;
+                    fragment.appendChild(row);
+                });
+                floorStatisticsTable.appendChild(fragment);
+            }
+        }
+
+        function generateInchargeGraph() {
+            const inchargeActivity = {};
+            responseHistory.forEach(entry => {
+                const modifiedBy = entry.modifiedBy || 'Unknown';
+                if (!inchargeActivity[modifiedBy]) {
+                    inchargeActivity[modifiedBy] = { positive: 0, negative: 0, total: 0 };
+                }
+                inchargeActivity[modifiedBy].total++;
+                if (entry.pointsChanged > 0) {
+                    inchargeActivity[modifiedBy].positive++;
+                } else if (entry.pointsChanged < 0) {
+                    inchargeActivity[modifiedBy].negative++;
+                }
+            });
+            
+            const sortedIncharges = Object.entries(inchargeActivity)
+                .map(([name, data]) => ({ name: name.split(' (')[0], ...data }))
+                .sort((a, b) => b.total - a.total)
+                .slice(0, 15); // Show top 15 for clarity
+
+            const labels = sortedIncharges.map(i => i.name);
+            const positiveData = sortedIncharges.map(i => i.positive);
+            const negativeData = sortedIncharges.map(i => i.negative);
+
+            if (window.inchargeChart) {
+                window.inchargeChart.destroy();
+            }
+
+            const ctx = document.getElementById('inchargeGraphCanvas').getContext('2d');
+            window.inchargeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Positive Entries',
+                        data: positiveData,
+                        backgroundColor: 'rgba(92, 184, 92, 0.7)',
+                    }, {
+                        label: 'Negative Entries',
+                        data: negativeData,
+                        backgroundColor: 'rgba(217, 83, 79, 0.7)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Number of Entries' } },
+                        x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } }
+                    }
+                }
+            });
+            new bootstrap.Modal(document.getElementById('inchargeGraphModal')).show();
+        }
+
+        function generateFloorGraph() {
+            const floorStats = {};
+            students.forEach(student => {
+                const floor = student.floor || 'Unknown';
+                if (!floorStats[floor]) {
+                    floorStats[floor] = { totalStudents: 0, totalPoints: 0 };
+                }
+                floorStats[floor].totalStudents++;
+                floorStats[floor].totalPoints += student.points;
+            });
+
+            const sortedFloors = Object.keys(floorStats).sort((a, b) => a - b);
+            const labels = sortedFloors.map(f => `Floor ${f}`);
+            const avgPointsData = sortedFloors.map(f => (
+                floorStats[f].totalStudents > 0 ? (floorStats[f].totalPoints / floorStats[f].totalStudents).toFixed(2) : 0
+            ));
+
+            if (window.floorChart) {
+                window.floorChart.destroy();
+            }
+
+            const ctx = document.getElementById('floorGraphCanvas').getContext('2d');
+            window.floorChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Average Points',
+                        data: avgPointsData,
+                        backgroundColor: 'rgba(74, 144, 226, 0.7)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { title: { display: true, text: 'Average Points' } }
+                    }
+                }
+            });
+            new bootstrap.Modal(document.getElementById('floorGraphModal')).show();
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
